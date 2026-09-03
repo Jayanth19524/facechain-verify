@@ -1,8 +1,10 @@
 {
   "person_detected": "Bobby Deol",
-  "matched_page": "https://www.youtube.com/watch?v=X82HkkPZJ4o&vl=en",
+  "matched_page": "https://www.youtube.com/watch?v=2B0RpUGss2c",
   "candidate_image": "https://images.news18.com/ibnlive/uploads/2026/07/Bobby-Deol-Thalapathy-Vijay-Jana-Nayagan-2026-07-e8029ca53ca6b92ed603a9c3ca76322c-1200x800.jpg",
-  "similarity": 0.9699199199676514,
+  "similarity": 0.9612,
   "verified": true,
-  "timestamp": "2026-09-03T15:24:25.420010"
+  "threshold": 0.6,
+  "timestamp": "2026-09-03T18:59:25.929360Z",
+  "input_image": "samples/face.jpg"
 }
