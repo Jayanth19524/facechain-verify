@@ -1,33 +1,36 @@
 # FaceChain Verify
 
-FaceChain Verify is an end-to-end proof-of-concept pipeline that combines face recognition, web discovery, and blockchain verification.
+FaceChain Verify is an end-to-end proof-of-concept pipeline that combines face recognition, web discovery, evidence generation, IPFS storage, and blockchain verification.
 
-The system accepts a face image as input, searches the web for visually matching content, verifies the discovered content using face similarity, generates an evidence package, and stores a tamper-evident record on the blockchain.
-
----
-
-## Status
-
-### Current Stage
-
-✅ Face Detection  
-✅ Face Embedding Generation  
-✅ Web Discovery (Google Cloud Vision)  
-✅ Candidate Image Collection  
-✅ Face Verification  
-✅ Evidence Generation
-
-### Next Stage
-
-⬜ Evidence Hashing (SHA-256)  
-⬜ IPFS Upload (Pinata)  
-⬜ Ethereum Sepolia Smart Contract  
-⬜ On-Chain Verification  
-⬜ Streamlit UI
+The system accepts a face image as input, searches the web for visually matching content, verifies the discovered content using face similarity, generates a cryptographically verifiable evidence package, stores the evidence on IPFS, and records its fingerprint on the Ethereum blockchain for future verification.
 
 ---
 
-## Architecture
+# Current Status
+
+## Completed
+
+- ✅ Face Detection
+- ✅ Face Embedding Generation
+- ✅ Web Discovery (Google Cloud Vision)
+- ✅ Candidate Image Collection
+- ✅ Face Verification
+- ✅ Evidence JSON Generation
+- ✅ SHA256 Evidence Hashing
+- ✅ IPFS Upload (Pinata)
+- ✅ Ethereum Sepolia Smart Contract Deployment
+- ✅ On-Chain Evidence Storage
+- ✅ Blockchain Evidence Retrieval
+
+## Remaining
+
+- ⬜ End-to-End Tamper Verification Script
+- ⬜ Streamlit Demo UI
+- ⬜ Multi-Evidence Smart Contract Support
+
+---
+
+# Architecture
 
 ```text
 Input Face
@@ -46,48 +49,62 @@ Evidence JSON
     ↓
 SHA256 Hash
     ↓
-IPFS (Pinata)
+IPFS Upload (Pinata)
     ↓
-Ethereum Sepolia
+CID
+    ↓
+Ethereum Sepolia Smart Contract
     ↓
 Verification
 ```
 
 ---
 
-## Features
+# Features
 
-### Face Recognition
+## Face Recognition
 
-- Detect faces from images
-- Generate 512-dimensional facial embeddings
-- Compare two faces using cosine similarity
-- Verify discovered images against the original face
+- Face detection using InsightFace
+- 512-dimensional facial embeddings
+- Cosine similarity verification
+- Face matching against discovered web images
 
-### Web Discovery
+## Web Discovery
 
-- Search the web using Google Cloud Vision Web Detection
-- Extract matching pages
-- Extract matching images
-- Discover candidate social media content
+- Google Cloud Vision Web Detection
+- Matching image discovery
+- Matching page discovery
+- Reverse-image-search style workflow
 
-### Evidence Generation
+## Evidence Generation
 
-- Create a structured evidence package
-- Store metadata about discovered content
-- Record similarity scores
-- Prepare evidence for blockchain attestation
+- Structured JSON evidence package
+- Verification metadata
+- Similarity score recording
+- Timestamp generation
 
-### Blockchain (Planned)
+## Cryptographic Verification
 
-- Hash evidence package
+- SHA256 evidence hashing
+- Tamper detection
+- Immutable fingerprint generation
+
+## Decentralized Storage
+
 - Upload evidence to IPFS
-- Store CID + hash on Ethereum Sepolia
-- Verify evidence integrity against on-chain record
+- Generate permanent CID
+- Content-addressable storage
+
+## Blockchain Verification
+
+- Ethereum Sepolia deployment
+- Smart contract storage
+- On-chain hash verification
+- Blockchain evidence retrieval
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 facechain-verify/
@@ -107,202 +124,94 @@ facechain-verify/
 │   └── run_pipeline.py
 │
 ├── evidence/
-│   └── evidence.json
+│   ├── evidence.json
+│   ├── evidence_hash.txt
+│   └── ipfs_cid.txt
 │
 ├── blockchain/
+│   ├── contracts/
+│   │   └── EvidenceRegistry.sol
+│   │
+│   ├── deploy.py
+│   ├── store_evidence.py
+│   ├── verify_blockchain.py
+│   └── contract_info.json
 │
 ├── samples/
 │   ├── face.jpg
-│   ├── candidate.jpg
-│   ├── face1.jpg
-│   ├── face2.jpg
-│   ├── embedding.npy
-│   └── embedding.json
+│   └── candidate.jpg
 │
 ├── credentials/
 │   └── gcp-key.json
 │
+├── .env
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Installation
+# Installation
 
-### Create Virtual Environment
+## Create Virtual Environment
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Install Dependencies
-
-```bash
-pip install insightface
-pip install onnxruntime
-pip install opencv-python
-pip install numpy
-pip install requests
-pip install google-cloud-vision
-pip install web3
-```
-
-Or:
+## Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
+Required packages:
+
+```text
+insightface
+onnxruntime
+opencv-python
+numpy
+requests
+google-cloud-vision
+web3
+python-dotenv
+py-solc-x
+```
+
 ---
 
-## Google Cloud Vision Setup
+# Configuration
 
-### 1. Create a Google Cloud Project
-
-Create a new Google Cloud project.
-
-### 2. Enable Vision API
-
-Enable:
-
-```text
-Cloud Vision API
-```
-
-### 3. Create Service Account
-
-Create a service account and download credentials.
-
-Store the key:
-
-```text
-credentials/
-└── gcp-key.json
-```
-
-### 4. Set Environment Variable
+## Google Cloud Vision
 
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS=credentials/gcp-key.json
 ```
 
-Verify setup:
+## Environment Variables
 
-```bash
-python search/vision_search.py
+Create `.env`
+
+```env
+PINATA_JWT=YOUR_PINATA_JWT
+
+RPC_URL=https://eth-sepolia.g.alchemy.com/v2/XXXX
+
+PRIVATE_KEY=YOUR_WALLET_PRIVATE_KEY
 ```
 
 ---
 
-## Face Recognition
+# Running The Pipeline
 
-### Generate Face Embedding
-
-```bash
-python face/encode.py
-```
-
-Example output:
-
-```text
-Faces found: 1
-Embedding length: 512
-Embedding saved
-```
-
-Generated files:
-
-```text
-samples/
-├── embedding.npy
-└── embedding.json
-```
-
----
-
-### Compare Two Faces
-
-```bash
-python face/compare.py
-```
-
-Example (same person):
-
-```text
-MATCH
-Similarity: 0.6911
-```
-
-Example (different people):
-
-```text
-NO MATCH
-Similarity: -0.0139
-```
-
----
-
-## Web Discovery
-
-### Search Using Google Cloud Vision
-
-```bash
-python search/vision_search.py
-```
-
-Example output:
-
-```text
-=== WEB ENTITIES ===
-
-Bobby Deol
-Actor
-Gentleman
-
-=== PAGES WITH MATCHING IMAGES ===
-
-https://www.instagram.com/...
-https://www.youtube.com/...
-```
-
-Returned information:
-
-```json
-{
-  "person_detected": "Bobby Deol",
-  "matched_page": "https://www.instagram.com/...",
-  "candidate_image": "https://images.news18.com/..."
-}
-```
-
----
-
-## End-to-End Pipeline
-
-Run the complete pipeline:
+## Step 1 – Face Search & Verification
 
 ```bash
 python -m pipeline.run_pipeline
 ```
 
-Pipeline flow:
-
-```text
-Input Face
-    ↓
-Google Cloud Vision Search
-    ↓
-Candidate Image Discovery
-    ↓
-Image Download
-    ↓
-InsightFace Verification
-    ↓
-Evidence Generation
-```
-
 Example output:
 
 ```json
@@ -316,18 +225,136 @@ Example output:
 }
 ```
 
-Generated file:
+Generated:
 
 ```text
-evidence/
-└── evidence.json
+evidence/evidence.json
 ```
 
 ---
 
-## Evidence Format
+## Step 2 – Generate SHA256 Hash
 
-Current generated evidence:
+```bash
+python evidence/hash_evidence.py
+```
+
+Generated:
+
+```text
+evidence/evidence_hash.txt
+```
+
+---
+
+## Step 3 – Upload Evidence To IPFS
+
+```bash
+python blockchain/upload_ipfs.py
+```
+
+Example:
+
+```json
+{
+  "IpfsHash": "Qmf7DZE32tDxWwNNFDJBcE4evpUk3SnbvqXZVsYyfKC7Q7"
+}
+```
+
+Generated:
+
+```text
+evidence/ipfs_cid.txt
+```
+
+---
+
+## Step 4 – Deploy Smart Contract
+
+```bash
+python blockchain/deploy.py
+```
+
+Example:
+
+```text
+Connected: True
+
+Deploying...
+
+Contract Address:
+0x4d4Bb04288232...
+```
+
+Generated:
+
+```text
+blockchain/contract_info.json
+```
+
+---
+
+## Step 5 – Store Evidence On Blockchain
+
+```bash
+python blockchain/store_evidence.py
+```
+
+Example:
+
+```text
+Stored!
+
+TX:
+0xd062d...
+```
+
+---
+
+## Step 6 – Verify Blockchain Record
+
+```bash
+python blockchain/verify_blockchain.py
+```
+
+Example:
+
+```text
+Blockchain Record
+
+CID:
+Qmf7DZE32tDxWwNNFDJBcE4evpUk3SnbvqXZVsYyfKC7Q7
+
+Hash:
+7c205501c80...
+
+Timestamp:
+1788457380
+```
+
+---
+
+# Smart Contract
+
+Current contract stores:
+
+```solidity
+struct Evidence {
+    string cid;
+    string evidenceHash;
+    uint256 timestamp;
+}
+```
+
+Stored on:
+
+```text
+Ethereum Sepolia Testnet
+```
+
+---
+
+# Example Evidence Record
 
 ```json
 {
@@ -340,36 +367,18 @@ Current generated evidence:
 }
 ```
 
-Future blockchain evidence:
-
-```json
-{
-  "person_detected": "Bobby Deol",
-  "matched_page": "...",
-  "candidate_image": "...",
-  "similarity": 0.9699,
-  "verified": true,
-  "evidence_hash": "sha256_hash",
-  "ipfs_cid": "Qm...",
-  "blockchain_tx": "0x...",
-  "timestamp": "2026-09-03T15:24:25.420010"
-}
-```
-
 ---
 
-## Verification Flow
+# Verification Flow
 
 ```text
 Face Image
     ↓
 Google Cloud Vision
     ↓
-Candidate URLs
+Matching Content
     ↓
-Image Download
-    ↓
-InsightFace Verification
+Face Verification
     ↓
 Evidence JSON
     ↓
@@ -377,86 +386,70 @@ SHA256 Hash
     ↓
 IPFS Upload
     ↓
-Ethereum Attestation
+CID
+    ↓
+Ethereum Storage
     ↓
 Future Verification
 ```
 
 ---
 
-## Technologies
+# Technologies
 
-### Face Recognition
+## Face Recognition
 
 - InsightFace
 - ONNX Runtime
 - OpenCV
 - NumPy
 
-### Search Layer
+## Search Layer
 
 - Google Cloud Vision API
 - Web Detection API
 
-### Storage
+## Storage
 
 - JSON Evidence Package
-- Pinata IPFS (planned)
+- IPFS
+- Pinata
 
-### Blockchain
+## Blockchain
 
 - Ethereum Sepolia
+- Solidity
 - Web3.py
-- Solidity (planned)
+- Alchemy RPC
 
 ---
 
-## Roadmap
+# Known Limitations
 
-### Phase 1 — Face Recognition
-
-- [x] Face detection
-- [x] Face embedding generation
-- [x] Face similarity verification
-
-### Phase 2 — Web Discovery
-
-- [x] Google Cloud Vision integration
-- [x] Candidate image discovery
-- [x] Candidate image download
-- [x] Face validation against discovered images
-
-### Phase 3 — Evidence Generation
-
-- [x] Evidence JSON creation
-- [x] End-to-end pipeline execution
-
-### Phase 4 — Blockchain
-
-- [ ] SHA256 evidence hashing
-- [ ] Pinata IPFS upload
-- [ ] Ethereum Sepolia deployment
-- [ ] Smart contract integration
-- [ ] Verification workflow
-
-### Phase 5 — User Interface
-
-- [ ] Streamlit dashboard
-- [ ] Upload interface
-- [ ] Verification viewer
+- Depends on Google Cloud Vision search results.
+- Currently evaluates only the first discovered candidate image.
+- Stores a single evidence record on-chain.
+- Social media discovery depends on Google's indexing.
+- No UI yet.
+- Verification currently uses one candidate image rather than multiple corroborating sources.
 
 ---
 
-## Known Limitations
+# Hackathon Deliverable Coverage
 
-- Depends on Google Cloud Vision search results
-- Current implementation evaluates only the top discovered candidate image
-- Social media results depend on Google's indexing
-- No blockchain integration yet
-- No user interface yet
+- ✅ Face identification
+- ✅ Genuine web discovery
+- ✅ Matching content retrieval
+- ✅ Face verification
+- ✅ Evidence generation
+- ✅ SHA256 hashing
+- ✅ IPFS upload
+- ✅ Blockchain storage
+- ✅ Blockchain retrieval
+- ✅ Tamper-evident verification architecture
 
 ---
 
-## License
+# License
 
 MIT License
