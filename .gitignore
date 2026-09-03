@@ -1,0 +1,54 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment variables
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Node.js
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Playwright
+playwright-report/
+test-results/
+
+# IDEs
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+build/
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Temporary files
+tmp/
+temp/
+
+# Generated embeddings
+samples/*.npy
+
+# Blockchain secrets
+wallet.json
+keystore/

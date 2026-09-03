@@ -1,29 +1,40 @@
 from google.cloud import vision
-import os
 
-client = vision.ImageAnnotatorClient()
 
-with open("samples/face.jpg", "rb") as image_file:
-    content = image_file.read()
+def search_image(image_path):
+    client = vision.ImageAnnotatorClient()
 
-image = vision.Image(content=content)
+    with open(image_path, "rb") as image_file:
+        content = image_file.read()
 
-response = client.web_detection(image=image)
+    image = vision.Image(content=content)
 
-web_detection = response.web_detection
+    response = client.web_detection(image=image)
 
-print("\n=== WEB ENTITIES ===")
-for entity in web_detection.web_entities[:10]:
-    print(entity.description, entity.score)
+    web_detection = response.web_detection
 
-print("\n=== PAGES WITH MATCHING IMAGES ===")
-for page in web_detection.pages_with_matching_images[:10]:
-    print(page.url)
+    if not web_detection.web_entities:
+        raise Exception("No web entities found")
 
-print("\n=== FULL MATCHING IMAGES ===")
-for image in web_detection.full_matching_images[:10]:
-    print(image.url)
+    if not web_detection.pages_with_matching_images:
+        raise Exception("No matching pages found")
 
-print("\n=== PARTIAL MATCHING IMAGES ===")
-for image in web_detection.partial_matching_images[:10]:
-    print(image.url)
+    if not web_detection.partial_matching_images:
+        raise Exception("No candidate images found")
+
+    return {
+        "person_detected":
+            web_detection.web_entities[0].description,
+
+        "matched_page":
+            web_detection.pages_with_matching_images[0].url,
+
+        "candidate_image":
+            web_detection.partial_matching_images[0].url
+    }
+
+
+if __name__ == "__main__":
+    result = search_image("samples/face.jpg")
+
+    print(result)
