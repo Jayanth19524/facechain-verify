@@ -1,3 +1,4 @@
+import argparse
 import requests
 import os
 import json
@@ -8,15 +9,19 @@ load_dotenv()
 
 PINATA_JWT = os.getenv("PINATA_JWT")
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--evidence-path", default="evidence/evidence.json")
+args = parser.parse_args()
+
 url = "https://api.pinata.cloud/pinning/pinFileToIPFS"
 
 headers = {
     "Authorization": f"Bearer {PINATA_JWT}"
 }
 
-with open("evidence/evidence.json", "rb") as f:
+with open(args.evidence_path, "rb") as f:
     files = {
-        "file": ("evidence.json", f)
+        "file": (os.path.basename(args.evidence_path), f)
     }
 
     response = requests.post(
@@ -36,9 +41,10 @@ cid = (
 )
 
 if cid:
-    with open("evidence/ipfs_cid.txt", "w") as f:
+    evidence_dir = os.path.dirname(args.evidence_path)
+    with open(os.path.join(evidence_dir, "ipfs_cid.txt"), "w") as f:
         f.write(cid)
 
     print("\nSaved CID:")
-    print("evidence/ipfs_cid.txt")
+    print(f"{evidence_dir}/ipfs_cid.txt")
     print(cid)

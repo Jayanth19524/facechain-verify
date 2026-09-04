@@ -16,12 +16,17 @@ def compute_sha256(filepath: str) -> str:
 
 
 def main():
-    evidence_path = "evidence/evidence.json"
-    output_path = "evidence/evidence_hash.txt"
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--evidence-path", default="evidence/evidence.json")
+    parser.add_argument("--output-path", default="evidence/evidence_hash.txt")
+    opts = parser.parse_args()
+
+    evidence_path = opts.evidence_path
+    output_path = opts.output_path
 
     if not os.path.exists(evidence_path):
         print(f"❌ Evidence file not found: {evidence_path}")
-        print("Run the pipeline first: python -m pipeline.run_pipeline")
         sys.exit(1)
 
     evidence_hash = compute_sha256(evidence_path)

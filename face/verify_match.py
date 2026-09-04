@@ -15,16 +15,14 @@ def get_embedding(image_path):
 
     return faces[0].embedding
 
-face1 = get_embedding("samples/face.jpg")
-face2 = get_embedding("samples/candidate.jpg")
-
-similarity = np.dot(face1, face2) / (
-    np.linalg.norm(face1) * np.linalg.norm(face2)
-)
-
 def verify_match(image1, image2):
-    ...
+    face1 = get_embedding(image1)
+    face2 = get_embedding(image2)
+    similarity = np.dot(face1, face2) / (
+        np.linalg.norm(face1) * np.linalg.norm(face2)
+    )
     return float(similarity)
+
 if __name__ == "__main__":
     similarity = verify_match(
         "samples/face.jpg",
@@ -33,7 +31,7 @@ if __name__ == "__main__":
 
     print(similarity)
 
-if similarity > 0.60:
-    print("MATCH")
-else:
-    print("NO MATCH")
+    if similarity > 0.60:
+        print("MATCH")
+    else:
+        print("NO MATCH")

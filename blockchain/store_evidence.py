@@ -41,9 +41,34 @@ with open(
 ) as f:
     evidence_hash = f.read().strip()
 
-nonce = w3.eth.get_transaction_count(
-    account.address
-)
+pending_count = w3.eth.get_transaction_count(account.address, "pending")
+latest_count = w3.eth.get_transaction_count(account.address, "latest")
+pending_txs = pending_count - latest_count
+
+if pending_txs > 0:
+    print(f"Canceling {pending_txs} pending transaction(s)...")
+    cancel_nonce = latest_count
+    cancel_tx = w3.eth.account.sign_transaction(
+        {
+            "from": account.address,
+            "to": account.address,
+            "value": 0,
+            "nonce": cancel_nonce,
+            "gas": 21000,
+            "gasPrice": int(w3.eth.gas_price * 1.5)
+        },
+        PRIVATE_KEY
+    )
+    cancel_hash = w3.eth.send_raw_transaction(cancel_tx.raw_transaction)
+    print(f"Cancel tx: {cancel_hash.hex()}")
+    try:
+        w3.eth.wait_for_transaction_receipt(cancel_hash, timeout=120, poll_latency=10)
+    except Exception:
+        pass
+
+nonce = w3.eth.get_transaction_count(account.address, "pending")
+
+gas_price = int(w3.eth.gas_price * 1.5)
 
 tx = contract.functions.storeEvidence(
     cid,
@@ -53,7 +78,7 @@ tx = contract.functions.storeEvidence(
         "from": account.address,
         "nonce": nonce,
         "gas": 300000,
-        "gasPrice": w3.eth.gas_price
+        "gasPrice": gas_price
     }
 )
 
@@ -67,9 +92,12 @@ tx_hash = w3.eth.send_raw_transaction(
 )
 
 print("Submitting...")
+print(f"Nonce: {nonce}, Gas Price: {gas_price}")
 
 receipt = w3.eth.wait_for_transaction_receipt(
-    tx_hash
+    tx_hash,
+    timeout=300,
+    poll_latency=10
 )
 
 print("\nStored!")

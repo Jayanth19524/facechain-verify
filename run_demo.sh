@@ -51,5 +51,3 @@ echo "╔═══════════════════════�
 echo "║       ✅ FULL PIPELINE COMPLETE                          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
-echo "To verify on-chain integrity:"
-echo "  python verify.py --cid \$(cat evidence/ipfs_cid.txt) --evidence evidence/evidence.json"

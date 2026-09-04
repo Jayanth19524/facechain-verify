@@ -2,11 +2,13 @@
 """
 FaceChain Verify - End-to-end face identification & blockchain verification pipeline.
 
+Searches multiple candidates, picks the best match by similarity, and pushes to blockchain.
+
 Usage:
     python -m pipeline.run_pipeline [options]
 
 Example:
-    python -m pipeline.run_pipeline --input samples/face.jpg --threshold 0.85 --verbose
+    python -m pipeline.run_pipeline --input samples/face.jpg --threshold 0.6 --verbose
 """
 
 import argparse
@@ -17,7 +19,6 @@ import time
 from datetime import datetime
 from typing import Optional
 
-from search.download_image import download_image
 from search.vision_search import search_image
 from face.verify_match import verify_match
 
@@ -75,7 +76,7 @@ def parse_args():
         epilog="""
 Examples:
   python -m pipeline.run_pipeline
-  python -m pipeline.run_pipeline --input samples/face.jpg --threshold 0.85
+  python -m pipeline.run_pipeline --input samples/face.jpg --threshold 0.6
   python -m pipeline.run_pipeline --input my_photo.jpg --output-dir my_evidence --verbose
         """
     )
@@ -96,9 +97,10 @@ Examples:
         help="Output directory for evidence files (default: evidence)"
     )
     parser.add_argument(
-        "--candidate-output",
-        default="samples/candidate.jpg",
-        help="Path to save downloaded candidate image (default: samples/candidate.jpg)"
+        "--max-candidates",
+        type=int,
+        default=8,
+        help="Max number of candidate images to evaluate (default: 8)"
     )
     parser.add_argument(
         "--max-retries",
@@ -124,6 +126,84 @@ def validate_input_image(image_path: str) -> bool:
     return True
 
 
+def find_best_match(input_image, candidates, threshold):
+    print_step("Step 3: Evaluating all candidates...")
+
+    best = None
+    best_similarity = 0.0
+
+    for i, cand in enumerate(candidates):
+        cand_path = cand["candidate_path"]
+        print_info(f"  Evaluating candidate {i+1}/{len(candidates)}: {cand_path}")
+        try:
+            similarity = retry_with_backoff(
+                verify_match, 2, 0.5, input_image, cand_path
+            )
+            print_info(f"    Similarity: {similarity:.4f}")
+            if similarity > best_similarity:
+                best_similarity = similarity
+                best = cand
+                best["similarity"] = round(similarity, 4)
+        except Exception as e:
+            print_error(f"    Failed to verify candidate {i+1}: {e}")
+            continue
+
+    if not best:
+        raise Exception("No candidates could be verified")
+
+    verified = best_similarity >= threshold
+
+    print_success(f"Best similarity: {best_similarity:.4f}")
+    if verified:
+        print_success(f"Above threshold ({threshold}) - VERIFIED")
+    else:
+        print_warning(f"Below threshold ({threshold}) - NOT VERIFIED")
+
+    return best, best_similarity, verified
+
+
+def save_evidence(evidence, evidence_path):
+    print_step("Step 4: Saving evidence...")
+    with open(evidence_path, "w") as f:
+        json.dump(evidence, f, indent=2)
+    print_success(f"Evidence saved to: {evidence_path}")
+
+
+def push_to_blockchain(evidence_path):
+    print_step("Step 5: Hashing evidence...")
+    import subprocess
+    result = subprocess.run(
+        [sys.executable, "evidence/hash_evidence.py", "--evidence-path", evidence_path],
+        capture_output=True, text=True
+    )
+    print(result.stdout.strip())
+    if result.returncode != 0:
+        print_error(f"Hash failed: {result.stderr}")
+        sys.exit(1)
+
+    print_step("Step 6: Uploading to IPFS...")
+    result = subprocess.run(
+        [sys.executable, "blockchain/upload_ipfs.py"],
+        capture_output=True, text=True
+    )
+    print(result.stdout.strip())
+    if result.returncode != 0:
+        print_error(f"IPFS upload failed: {result.stderr}")
+        sys.exit(1)
+
+    print_step("Step 7: Storing on blockchain...")
+    result = subprocess.run(
+        [sys.executable, "blockchain/store_evidence.py"],
+        capture_output=True, text=True
+    )
+    print(result.stdout.strip())
+    if result.returncode != 0:
+        print_error(f"Blockchain store failed: {result.stderr}")
+        sys.exit(1)
+
+    print_success("All blockchain steps completed!")
+
+
 def main():
     args = parse_args()
 
@@ -131,7 +211,6 @@ def main():
         sys.exit(1)
 
     os.makedirs(args.output_dir, exist_ok=True)
-
     evidence_path = os.path.join(args.output_dir, "evidence.json")
 
     print(f"{Colors.BOLD}{Colors.CYAN}")
@@ -142,69 +221,51 @@ def main():
 
     print_info(f"Input image: {args.input}")
     print_info(f"Similarity threshold: {args.threshold}")
+    print_info(f"Max candidates: {args.max_candidates}")
     print_info(f"Output directory: {args.output_dir}")
     print()
 
     try:
         print_step("Step 1: Searching web for matching content...")
         search_result = retry_with_backoff(
-            search_image, args.max_retries, 1.0, args.input
+            search_image, args.max_retries, 1.0, args.input, args.max_candidates
         )
 
         if args.verbose:
             print(json.dumps(search_result, indent=2))
 
         person = search_result.get("person_detected", "Unknown")
-        page = search_result.get("matched_page", "")
-        candidate_url = search_result.get("candidate_image", "")
+        candidates = search_result.get("candidates", [])
 
-        if not candidate_url:
-            print_error("No candidate image URL found in search results")
+        if not candidates:
+            print_error("No candidate images found in search results")
             sys.exit(1)
 
         print_success(f"Person detected: {person}")
-        print_success(f"Matched page: {page}")
+        print_info(f"Candidates collected: {len(candidates)}")
         print()
 
-        print_step("Step 2: Downloading candidate image...")
-        candidate_path = retry_with_backoff(
-            download_image, args.max_retries, 1.0, candidate_url, args.candidate_output
-        )
-        print_success(f"Downloaded to: {candidate_path}")
-        print()
-
-        print_step("Step 3: Verifying face match...")
-        similarity = retry_with_backoff(
-            verify_match, args.max_retries, 1.0, args.input, candidate_path
+        best_candidate, best_similarity, verified = find_best_match(
+            args.input, candidates, args.threshold
         )
 
-        print_success(f"Similarity score: {similarity:.4f}")
-
-        if similarity < args.threshold:
-            print_warning(f"Below threshold ({args.threshold}) - NOT VERIFIED")
-        else:
-            print_success(f"Above threshold ({args.threshold}) - VERIFIED")
         print()
-
-        verified = similarity >= args.threshold
-
         print_step("Step 4: Building evidence package...")
         evidence = {
             "person_detected": person,
-            "matched_page": page,
-            "candidate_image": candidate_url,
-            "similarity": round(similarity, 4),
+            "matched_page": best_candidate.get("matched_page", ""),
+            "candidate_image": best_candidate.get("candidate_image", ""),
+            "candidate_path": best_candidate.get("candidate_path", ""),
+            "similarity": best_candidate.get("similarity", best_similarity),
             "verified": verified,
             "threshold": args.threshold,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "total_candidates_evaluated": len(candidates),
+            "best_candidate_index": candidates.index(best_candidate) + 1 if best_candidate in candidates else 0,
+            "timestamp": datetime.now().isoformat() + "Z",
             "input_image": args.input
         }
 
-        print_step("Step 5: Saving evidence...")
-        with open(evidence_path, "w") as f:
-            json.dump(evidence, f, indent=2)
-
-        print_success(f"Evidence saved to: {evidence_path}")
+        save_evidence(evidence, evidence_path)
 
         print()
         print(f"{Colors.BOLD}{Colors.CYAN}{'='*58}{Colors.RESET}")
@@ -216,21 +277,23 @@ def main():
 
         if verified:
             print_success("NEXT STEPS:")
-            print("  1. python evidence/hash_evidence.py")
+            print("  1. python blockchain/hash_evidence.py")
             print("  2. python blockchain/upload_ipfs.py")
-            print("  3. python blockchain/deploy.py")
-            print("  4. python blockchain/store_evidence.py")
-            print("  5. python blockchain/verify_blockchain.py")
+            print("  3. python blockchain/store_evidence.py")
+            print("  4. python blockchain/verify_blockchain.py")
+            print()
+            print_step("Pushing to blockchain automatically...")
+            push_to_blockchain(evidence_path)
         else:
-            print_warning("Face not verified. Try a different input image or lower threshold.")
+            print_warning(
+                f"Face not verified (best similarity {best_similarity:.4f} < {args.threshold})."
+                f" Try a different input image or lower threshold."
+            )
 
         sys.exit(0 if verified else 2)
 
     except FileNotFoundError as e:
         print_error(f"File not found: {e}")
-        sys.exit(1)
-    except requests.exceptions.RequestException as e:
-        print_error(f"Network error: {e}")
         sys.exit(1)
     except Exception as e:
         print_error(f"Pipeline failed: {e}")
@@ -241,5 +304,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import requests
     main()

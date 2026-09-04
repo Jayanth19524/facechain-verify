@@ -9,7 +9,7 @@ __pycache__/
 
 # Environment variables
 .env
-.env.*
+
 
 # macOS
 .DS_Store
@@ -52,3 +52,6 @@ samples/*.npy
 # Blockchain secrets
 wallet.json
 keystore/
+
+# Google Cloud credentials
+credentials/

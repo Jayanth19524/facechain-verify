@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "read": {
+      "*": "allow",
+      ".env": "deny",
+      ".env.*": "deny",
+      "credentials/**": "deny",
+      "wallet.json": "deny",
+      "keystore/**": "deny",
+      "blockchain/contract_info.json": "deny"
+    }
+  }
+}
