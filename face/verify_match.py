@@ -3,12 +3,16 @@ import numpy as np
 from insightface.app import FaceAnalysis
 
 app = FaceAnalysis(name="buffalo_l")
-app.prepare(ctx_id=0)
+app.prepare(ctx_id=0, det_thresh=0.3, det_size=(640, 640))
 
 def get_embedding(image_path):
     img = cv2.imread(image_path)
+    h, w = img.shape[:2]
+    if max(h, w) > 1024:
+        scale = 1024 / max(h, w)
+        img = cv2.resize(img, (int(w * scale), int(h * scale)))
 
-    faces = app.get(img)
+    faces = app.get(img, max_num=1, det_metric="area")
 
     if not faces:
         raise Exception(f"No face found in {image_path}")

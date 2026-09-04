@@ -23,31 +23,15 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-echo "▶ Step 1: Face search & verification"
 python -m pipeline.run_pipeline --input "$INPUT_IMAGE" --verbose
-echo ""
 
-echo "▶ Step 2: Generate SHA256 hash"
-python evidence/hash_evidence.py
 echo ""
-
-echo "▶ Step 3: Upload evidence to IPFS"
-python blockchain/upload_ipfs.py
-echo ""
-
-echo "▶ Step 4: Deploy smart contract"
-python blockchain/deploy.py
-echo ""
-
-echo "▶ Step 5: Store evidence on blockchain"
-python blockchain/store_evidence.py
-echo ""
-
-echo "▶ Step 6: Verify blockchain record"
-python blockchain/verify_blockchain.py
-echo ""
-
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║       ✅ FULL PIPELINE COMPLETE                          ║"
+echo "║       ✅ PIPELINE COMPLETE — Verifying On-Chain Record    ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
+
+python blockchain/verify_blockchain.py
+
+echo ""
+echo "✅ Done!"

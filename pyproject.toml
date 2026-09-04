@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "facechain-verify"
+version = "1.0.0"
+description = "End-to-end face verification pipeline with blockchain evidence storage"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "FaceChain Verify"}]
+dependencies = [
+    "insightface>=1.0.1",
+    "opencv-python>=4.8",
+    "numpy>=1.24",
+    "onnxruntime>=1.16",
+    "google-cloud-vision>=3.0",
+    "serpapi>=1.0",
+    "web3>=8.0",
+    "python-dotenv>=1.0",
+    "py-solc-x>=2.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+facechain-verify = "pipeline.run_pipeline:main"
+
+[tool.setuptools.packages.find]
+include = ["face*", "search*", "pipeline*", "evidence*"]
+
+[tool.setuptools.package-data]
+"*" = ["**/*.sol", "**/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["face", "search", "pipeline", "blockchain"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
