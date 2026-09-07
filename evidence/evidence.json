@@ -1,10 +1,13 @@
 {
-  "person_detected": "Bobby Deol",
-  "matched_page": "https://www.youtube.com/watch?v=2B0RpUGss2c",
-  "candidate_image": "https://images.news18.com/ibnlive/uploads/2026/07/Bobby-Deol-Thalapathy-Vijay-Jana-Nayagan-2026-07-e8029ca53ca6b92ed603a9c3ca76322c-1200x800.jpg",
-  "similarity": 0.9612,
+  "person_detected": "Bill Gates",
+  "matched_page": "https://www.instagram.com/p/Dch1JqdlGK7/",
+  "candidate_image": "https://scontent.cdninstagram.com/v/t39.30808-6/779957607_1491364439689122_4879688197908911435_n.jpg?stp=c216.0.648.648a_dst-jpg_e35_s640x640_tt6&amp;_nc_cat=110&amp;ccb=7-5&amp;_nc_sid=18de74&amp;efg=eyJlZmdfdGFnIjoiRkVFRC5iZXN0X2ltYWdlX3VybGdlbi5DMyJ9&amp;_nc_ohc=THrfRsYm2xkQ7kNvwFMAzBJ&amp;_nc_oc=AdrQ2OrrFxCejtznvfiscmrJjgvXmc3i6jrXb716i5OkQ3lapqfuR4YA2BHw_33McX4qPEAawzt6uBtKRWgiBmLD&amp;_nc_zt=23&amp;_nc_ht=scontent.cdninstagram.com&amp;_nc_gid=MVMAKZk6ZUIMRedtfCloyw&amp;_nc_ss=7960f&amp;oh=00_AQJf8fazLs802MaiVb28qOXWhAeGFUJ7rU7i8FcOwRY7gw&amp;oe=6AA48495",
+  "candidate_path": "samples/candidate_4.jpg",
+  "similarity": 0.7255,
   "verified": true,
   "threshold": 0.6,
-  "timestamp": "2026-09-03T18:59:25.929360Z",
-  "input_image": "samples/face.jpg"
+  "total_candidates_evaluated": 7,
+  "best_candidate_index": 5,
+  "timestamp": "2026-09-07T19:55:50.727499Z",
+  "input_image": "samples/face2.jpg"
 }

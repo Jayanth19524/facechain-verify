@@ -7,35 +7,50 @@ contract EvidenceRegistry {
         string cid;
         string evidenceHash;
         uint256 timestamp;
+        string personDetected;
     }
 
-    Evidence public evidence;
+    uint256 public evidenceCount;
+    mapping(uint256 => Evidence) public evidences;
 
     function storeEvidence(
         string memory _cid,
-        string memory _hash
+        string memory _hash,
+        string memory _personDetected
     ) public {
 
-        evidence = Evidence({
+        evidenceCount = evidenceCount + 1;
+        evidences[evidenceCount] = Evidence({
             cid: _cid,
             evidenceHash: _hash,
-            timestamp: block.timestamp
+            timestamp: block.timestamp,
+            personDetected: _personDetected
         });
     }
 
-    function getEvidence()
+    function getEvidence(uint256 _evidenceId)
         public
         view
         returns (
             string memory,
             string memory,
-            uint256
+            uint256,
+            string memory
         )
     {
         return (
-            evidence.cid,
-            evidence.evidenceHash,
-            evidence.timestamp
+            evidences[_evidenceId].cid,
+            evidences[_evidenceId].evidenceHash,
+            evidences[_evidenceId].timestamp,
+            evidences[_evidenceId].personDetected
         );
+    }
+
+    function getEvidenceCount()
+        public
+        view
+        returns (uint256)
+    {
+        return evidenceCount;
     }
 }

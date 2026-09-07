@@ -1,0 +1,1 @@
+{"threshold": 0.6, "max_candidates": 8, "input_path": "samples/face.jpg", "output_dir": "evidence", "model_name": "buffalo_l"}

@@ -17,15 +17,24 @@ with open("blockchain/contract_info.json", "r") as f:
 
 contract = w3.eth.contract(address=contract_info["address"], abi=contract_info["abi"])
 
-cid, evidence_hash, timestamp = contract.functions.getEvidence().call()
+evidence_count = contract.functions.getEvidenceCount().call()
 
-print("\nBlockchain Record")
-print("------------------")
-print("CID:", cid)
-print("Hash:", evidence_hash)
-print("Timestamp:", timestamp)
+print("\nBlockchain Records")
+print("==================")
+print(f"Total records stored: {evidence_count}")
 
-print("\n--- Re-verifying ---")
+for i in range(1, int(evidence_count) + 1):
+    cid, evidence_hash, timestamp, person_detected = contract.functions.getEvidence(i).call()
+    print(f"\nRecord {i}:")
+    print(f"  CID: {cid}")
+    print(f"  Hash: {evidence_hash}")
+    print(f"  Timestamp: {timestamp}")
+    print(f"  Person: {person_detected}")
+
+print("\n--- Re-verifying latest record ---")
+
+latest_id = int(evidence_count)
+cid, evidence_hash, timestamp, person_detected = contract.functions.getEvidence(latest_id).call()
 
 pinata_url = f"https://gateway.pinata.cloud/ipfs/{cid}"
 print(f"Downloading from IPFS: {pinata_url}")

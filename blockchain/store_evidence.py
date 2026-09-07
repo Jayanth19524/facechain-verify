@@ -70,9 +70,21 @@ nonce = w3.eth.get_transaction_count(account.address, "pending")
 
 gas_price = int(w3.eth.gas_price * 1.5)
 
+# Read person_detected from evidence.json
+def get_person_detected():
+    try:
+        with open("evidence/evidence.json", "r") as f:
+            evidence = json.load(f)
+            return evidence.get("person_detected", "")
+    except (FileNotFoundError, json.JSONDecodeError):
+        return ""
+
+person_detected = get_person_detected()
+
 tx = contract.functions.storeEvidence(
     cid,
-    evidence_hash
+    evidence_hash,
+    person_detected
 ).build_transaction(
     {
         "from": account.address,
